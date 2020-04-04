@@ -1,13 +1,10 @@
 import retro
 
 def main():
-    env = retro.make(game='SonicTheHedgehog-Genesis')
+    env = retro.make(game='SpaceInvaders-Atari2600')
     obs = env.reset()
-    while True:
-        obs, rew, done, info = env.step(env.action_space.sample())
-        env.render()
-        if done:
-            obs = env.reset()
+    print("The size of our frame is: ", env.observation_space)
+    print("The action size is : ", env.action_space.n)
     env.close()
 
 
