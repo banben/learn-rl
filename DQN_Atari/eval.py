@@ -314,7 +314,7 @@ def predict_action(explore_start, explore_stop, decay_rate, decay_step, state, a
     return action, explore_probability
 
 # Saver will help us to save our model
-saver = tf.train.Saver()
+saver = tf.train.Saver(max_to_keep=100000)
 
 if training == True:
     with tf.Session() as sess:
