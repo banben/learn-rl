@@ -125,7 +125,7 @@ stack_size = 4                 # Number of frames stacked
 training = True
 
 ## TURN THIS TO TRUE IF YOU WANT TO RENDER THE ENVIRONMENT
-episode_render = False
+episode_render = True
 
 class DQNetwork:
     def __init__(self, state_size, action_size, learning_rate, name='DQNetwork'):
