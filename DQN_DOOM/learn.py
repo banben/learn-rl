@@ -501,5 +501,5 @@ if training == True:
 
             # Save model every 5 episodes
             if episode % 5 == 0:
-                save_path = saver.save(sess, "./models/model.ckpt")
+                save_path = saver.save(sess, "./models/model-%s.ckpt" % episode)
                 print("Model Saved")
