@@ -116,7 +116,7 @@ gamma = 0.9                    # Discounting rate
 
 ### MEMORY HYPERPARAMETERS
 pretrain_length = batch_size   # Number of experiences stored in the Memory when initialized for the first time
-memory_size = 1000000          # Number of experiences the Memory can keep
+memory_size = 10000          # Number of experiences the Memory can keep
 
 ### PREPROCESSING HYPERPARAMETERS
 stack_size = 4                 # Number of frames stacked
