@@ -373,8 +373,6 @@ if training == True:
                                   'Explore P: {:.4f}'.format(explore_probability),
                                 'Training Loss {:.4f}'.format(loss))
 
-                    rewards_list.append((episode, total_reward))
-
                     # Store transition <st,at,rt+1,st+1> in memory D
                     memory.add((state, action, reward, next_state, done))
 
