@@ -439,7 +439,7 @@ with tf.Session() as sess:
     total_test_rewards = []
     
     # Load the model
-    saver.restore(sess, "./models/model-13.ckpt")
+    saver.restore(sess, "./models/model-23.ckpt")
     
     for episode in range(1):
         total_rewards = 0
