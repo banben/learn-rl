@@ -451,7 +451,7 @@ while index < 200:
             state, stacked_frames = stack_frames(stacked_frames, state, True)
             
             print("****************************************************")
-            print("EPISODE ", episode)
+            print("EPISODE ", index)
             
             while True:
                 # Reshape the state
@@ -479,4 +479,4 @@ while index < 200:
                 next_state, stacked_frames = stack_frames(stacked_frames, next_state, False)
                 state = next_state
                 
-        env.close()
+        # env.close()
