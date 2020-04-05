@@ -436,6 +436,8 @@ if training == True:
                 print("Model Saved")
 
 index = 0
+max_mean_score = -100
+max_mean_index = 0
 max_score = -100
 max_index = 0
 while index <= 243:
@@ -474,6 +476,9 @@ while index <= 243:
                 if done:
                     print ("Score", total_rewards)
                     total_test_rewards.append(total_rewards)
+                    if total_rewards > max_score:
+                        max_score = total_rewards
+                        max_index = index
                     break
                     
                     
@@ -482,12 +487,14 @@ while index <= 243:
 
         mean_rewards = np.mean(total_test_rewards)
 
-        if mean_rewards > max_score:
-            max_score = mean_rewards
-            max_index = index
+        if mean_rewards > max_mean_score:
+            max_mean_score = mean_rewards
+            max_mean_index = index
 
         index = index + 1
         # env.close()
 
+print("Max mean score:", max_mean_score)
+print("Max mean index:", max_mean_index)
 print("Max score:", max_score)
 print("Max index:", max_index)
