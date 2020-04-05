@@ -444,9 +444,8 @@ while index <= 243:
         
         # Load the model
         saver.restore(sess, "./models/model-%s.ckpt" % index)
-        index = index + 1
 
-        for episode in range(1):
+        for episode in range(10):
             total_rewards = 0
             
             state = env.reset()
@@ -475,15 +474,19 @@ while index <= 243:
                 if done:
                     print ("Score", total_rewards)
                     total_test_rewards.append(total_rewards)
-                    if total_rewards > max_score:
-                        max_score = total_rewards
-                        max_index = index - 1
                     break
                     
                     
                 next_state, stacked_frames = stack_frames(stacked_frames, next_state, False)
                 state = next_state
-                
+
+        mean_rewards = np.mean(total_test_rewards)
+
+        if mean_rewards > max_score:
+            max_score = mean_rewards
+            max_index = index
+
+        index = index + 1
         # env.close()
 
 print("Max score:", max_score)
