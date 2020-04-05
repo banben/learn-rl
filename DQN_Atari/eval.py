@@ -436,7 +436,9 @@ if training == True:
                 print("Model Saved")
 
 index = 0
-while index < 200:
+max_score = -100
+max_index = 0
+while index <= 243:
     with tf.Session() as sess:
         total_test_rewards = []
         
@@ -473,6 +475,9 @@ while index < 200:
                 if done:
                     print ("Score", total_rewards)
                     total_test_rewards.append(total_rewards)
+                    if total_rewards > max_score:
+                        max_score = total_rewards
+                        max_index = index - 1
                     break
                     
                     
@@ -480,3 +485,6 @@ while index < 200:
                 state = next_state
                 
         # env.close()
+
+print("Max score:", max_score)
+print("Max index:", max_index)
