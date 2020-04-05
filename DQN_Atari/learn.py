@@ -1,7 +1,7 @@
 import tensorflow as tf      # Deep Learning library
 import numpy as np           # Handle matrices
 import retro                 # Retro Environment
-
+import h5py
 
 from skimage import transform # Help us to preprocess the frames
 from skimage.color import rgb2gray # Help us to gray our frames
@@ -116,7 +116,7 @@ gamma = 0.9                    # Discounting rate
 
 ### MEMORY HYPERPARAMETERS
 pretrain_length = batch_size   # Number of experiences stored in the Memory when initialized for the first time
-memory_size = 10000          # Number of experiences the Memory can keep
+memory_size = 1000000          # Number of experiences the Memory can keep
 
 ### PREPROCESSING HYPERPARAMETERS
 stack_size = 4                 # Number of frames stacked
@@ -220,19 +220,32 @@ tf.reset_default_graph()
 DQNetwork = DQNetwork(state_size, action_size, learning_rate)
 
 class Memory():
-    def __init__(self, max_size):
-        self.buffer = deque(maxlen = max_size)
+    def __init__(self, max_size=1000000):
+        self.buffer_file = h5py.File('memory.h5','w')
+        self.buffer_state = self.buffer_file.create_dataset("state", (max_size, 110, 84, 4), dtype='f8')
+        self.buffer_action = self.buffer_file.create_dataset("action", (max_size, 8), dtype='i8')
+        self.buffer_reward = self.buffer_file.create_dataset("reward", (max_size, ), dtype='f2')
+        self.buffer_next_state = self.buffer_file.create_dataset("next_state", (max_size, 110, 84, 4), dtype='f8')
+        self.buffer_done = self.buffer_file.create_dataset("done", (max_size, ), dtype='b1')
+        self.len = 0
     
     def add(self, experience):
-        self.buffer.append(experience)
+        self.buffer_state[self.len] = experience[0]
+        self.buffer_action[self.len] = experience[1]
+        self.buffer_reward[self.len] = experience[2]
+        self.buffer_next_state[self.len] = experience[3]
+        self.buffer_done[self.len] = experience[4]
+        self.len = self.len + 1
     
     def sample(self, batch_size):
-        buffer_size = len(self.buffer)
+        buffer_size = self.len
         index = np.random.choice(np.arange(buffer_size),
                                 size = batch_size,
                                 replace = False)
         
-        return [self.buffer[i] for i in index]
+        batch = [(self.buffer_state[i], self.buffer_action[i], self.buffer_reward[i], self.buffer_next_state[i], self.buffer_done[i]) for i in index]
+
+        return batch
 
 # Instantiate memory
 memory = Memory(max_size = memory_size)
