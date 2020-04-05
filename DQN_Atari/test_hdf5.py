@@ -6,7 +6,7 @@ class Memory():
     def __init__(self, max_size=1000000):
         self.buffer_file = h5py.File('memory.h5','w')
         self.buffer_state = self.buffer_file.create_dataset("state", (max_size, 110, 84, 4), dtype='f8')
-        self.buffer_action = self.buffer_file.create_dataset("action", (max_size, 8, ), dtype='i8')
+        self.buffer_action = self.buffer_file.create_dataset("action", (max_size, 8), dtype='i8')
         self.buffer_reward = self.buffer_file.create_dataset("reward", (max_size, 1), dtype='f2')
         self.buffer_next_state = self.buffer_file.create_dataset("next_state", (max_size, 110, 84, 4), dtype='f8')
         self.buffer_done = self.buffer_file.create_dataset("done", (max_size, 1), dtype='b1')
@@ -26,13 +26,9 @@ class Memory():
                                 size = batch_size,
                                 replace = False)
         
-        return (
-            [self.buffer_state[i] for i in index],
-            [self.buffer_action[i] for i in index],
-            [self.buffer_reward[i] for i in index],
-            [self.buffer_next_state[i] for i in index],
-            [self.buffer_done[i] for i in index]
-        )
+        batch = [(self.buffer_state[i], self.buffer_action[i], self.buffer_reward[i], self.buffer_next_state[i], self.buffer_done[i]) for i in index]
+
+        return batch
 
 memory = Memory()
 
@@ -43,4 +39,4 @@ exp = pickle.load(open('mem.pkl', 'rb'))
 
 for i in range(64):
     memory.add(exp)
-print(np.shape(memory.sample(64)[0]))
+print(np.shape(memory.sample(64)))
