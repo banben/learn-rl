@@ -447,7 +447,7 @@ while index <= 243:
         # Load the model
         saver.restore(sess, "./models/model-%s.ckpt" % index)
 
-        for episode in range(10):
+        for episode in range(5):
             total_rewards = 0
             
             state = env.reset()
