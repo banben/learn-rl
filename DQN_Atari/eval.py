@@ -452,7 +452,7 @@ while index <= 243:
             state, stacked_frames = stack_frames(stacked_frames, state, True)
             
             print("****************************************************")
-            print("EPISODE ", index-1)
+            print("MODEL:", index, ", EPISODE:", episode)
             
             while True:
                 # Reshape the state
