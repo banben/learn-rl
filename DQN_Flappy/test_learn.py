@@ -397,7 +397,7 @@ if training == True:
                     state = next_state
                     
 
-                if episode % 4 == 0:
+                if step % 4 == 0:
                     ### LEARNING PART            
                     # Obtain random mini-batch from memory
                     batch = memory.sample(batch_size)
@@ -440,7 +440,7 @@ if training == True:
                     writer.flush()
 
             # Save model every 1 episodes
-            if episode % 4 == 0:
+            if episode % 1 == 0:
                 save_path = saver.save(sess, "./models/model-%s.ckpt" % episode)
                 print("Model Saved")
 
