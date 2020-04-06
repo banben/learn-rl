@@ -397,49 +397,50 @@ if training == True:
                     state = next_state
                     
 
-                ### LEARNING PART            
-                # Obtain random mini-batch from memory
-                batch = memory.sample(batch_size)
-                states_mb = np.array([each[0] for each in batch], ndmin=3)
-                actions_mb = np.array([each[1] for each in batch])
-                rewards_mb = np.array([each[2] for each in batch]) 
-                next_states_mb = np.array([each[3] for each in batch], ndmin=3)
-                dones_mb = np.array([each[4] for each in batch])
+                if episode % 4 == 0:
+                    ### LEARNING PART            
+                    # Obtain random mini-batch from memory
+                    batch = memory.sample(batch_size)
+                    states_mb = np.array([each[0] for each in batch], ndmin=3)
+                    actions_mb = np.array([each[1] for each in batch])
+                    rewards_mb = np.array([each[2] for each in batch]) 
+                    next_states_mb = np.array([each[3] for each in batch], ndmin=3)
+                    dones_mb = np.array([each[4] for each in batch])
 
-                target_Qs_batch = []
+                    target_Qs_batch = []
 
-                # Get Q values for next_state 
-                Qs_next_state = sess.run(DQNetwork.output, feed_dict = {DQNetwork.inputs_: next_states_mb})
-                
-                # Set Q_target = r if the episode ends at s+1, otherwise set Q_target = r + gamma*maxQ(s', a')
-                for i in range(0, len(batch)):
-                    terminal = dones_mb[i]
+                    # Get Q values for next_state 
+                    Qs_next_state = sess.run(DQNetwork.output, feed_dict = {DQNetwork.inputs_: next_states_mb})
+                    
+                    # Set Q_target = r if the episode ends at s+1, otherwise set Q_target = r + gamma*maxQ(s', a')
+                    for i in range(0, len(batch)):
+                        terminal = dones_mb[i]
 
-                    # If we are in a terminal state, only equals reward
-                    if terminal:
-                        target_Qs_batch.append(rewards_mb[i])
-                        
-                    else:
-                        target = rewards_mb[i] + gamma * np.max(Qs_next_state[i])
-                        target_Qs_batch.append(target)
-                        
+                        # If we are in a terminal state, only equals reward
+                        if terminal:
+                            target_Qs_batch.append(rewards_mb[i])
+                            
+                        else:
+                            target = rewards_mb[i] + gamma * np.max(Qs_next_state[i])
+                            target_Qs_batch.append(target)
+                            
 
-                targets_mb = np.array([each for each in target_Qs_batch])
+                    targets_mb = np.array([each for each in target_Qs_batch])
 
-                loss, _ = sess.run([DQNetwork.loss, DQNetwork.optimizer],
-                                        feed_dict={DQNetwork.inputs_: states_mb,
-                                                   DQNetwork.target_Q: targets_mb,
-                                                   DQNetwork.actions_: actions_mb})
-
-                # Write TF Summaries
-                summary = sess.run(write_op, feed_dict={DQNetwork.inputs_: states_mb,
+                    loss, _ = sess.run([DQNetwork.loss, DQNetwork.optimizer],
+                                            feed_dict={DQNetwork.inputs_: states_mb,
                                                        DQNetwork.target_Q: targets_mb,
                                                        DQNetwork.actions_: actions_mb})
-                writer.add_summary(summary, episode)
-                writer.flush()
+
+                    # Write TF Summaries
+                    summary = sess.run(write_op, feed_dict={DQNetwork.inputs_: states_mb,
+                                                           DQNetwork.target_Q: targets_mb,
+                                                           DQNetwork.actions_: actions_mb})
+                    writer.add_summary(summary, episode)
+                    writer.flush()
 
             # Save model every 1 episodes
-            if episode % 1 == 0:
+            if episode % 4 == 0:
                 save_path = saver.save(sess, "./models/model-%s.ckpt" % episode)
                 print("Model Saved")
 
