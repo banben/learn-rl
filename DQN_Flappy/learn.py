@@ -55,14 +55,14 @@ def preprocess_frame(frame):
     
     # Crop the screen (remove the part below the player)
     # [Up: Down, Left: right]
-    cropped_frame = gray[8:-12,4:-12]
+    cropped_frame = gray
     
     # Normalize Pixel Values
     normalized_frame = cropped_frame/255.0
     
     # Resize
     # Thanks to Mikołaj Walkowiak
-    preprocessed_frame = transform.resize(normalized_frame, [110,84])
+    preprocessed_frame = transform.resize(normalized_frame, [512,288])
     
     return preprocessed_frame # 110x84x1 frame
 
@@ -98,7 +98,7 @@ def stack_frames(stacked_frames, state, is_new_episode):
     return stacked_state, stacked_frames
 
 ### MODEL HYPERPARAMETERS
-state_size = [110, 84, 4]      # Our input is a stack of 4 frames hence 110x84x4 (Width, height, channels) 
+state_size = [512, 288, 4]      # Our input is a stack of 4 frames hence 110x84x4 (Width, height, channels) 
 action_size = env.action_space.n # 8 possible actions
 learning_rate =  0.00025      # Alpha (aka learning rate)
 
@@ -223,10 +223,10 @@ DQNetwork = DQNetwork(state_size, action_size, learning_rate)
 class Memory():
     def __init__(self, max_size=1000000):
         self.buffer_file = h5py.File('memory.h5','w')
-        self.buffer_state = self.buffer_file.create_dataset("state", (max_size, 110, 84, 4), dtype='f8')
+        self.buffer_state = self.buffer_file.create_dataset("state", (max_size, 512, 288, 4), dtype='f8')
         self.buffer_action = self.buffer_file.create_dataset("action", (max_size, 2), dtype='i8')
         self.buffer_reward = self.buffer_file.create_dataset("reward", (max_size, ), dtype='f2')
-        self.buffer_next_state = self.buffer_file.create_dataset("next_state", (max_size, 110, 84, 4), dtype='f8')
+        self.buffer_next_state = self.buffer_file.create_dataset("next_state", (max_size, 512, 288, 4), dtype='f8')
         self.buffer_done = self.buffer_file.create_dataset("done", (max_size, ), dtype='b1')
         self.len = 0
         self.i = 0
