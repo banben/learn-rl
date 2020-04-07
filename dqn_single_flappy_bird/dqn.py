@@ -25,7 +25,7 @@ class NeuralNetwork(nn.Module):
         self.replay_memory_size = 10000
         self.minibatch_size = 32
 
-        self.conv1 = nn.Conv2d(4, 32, 8, 4)
+        self.conv1 = nn.Conv2d(1, 32, 8, 4)
         self.relu1 = nn.ReLU(inplace=True)
         self.conv2 = nn.Conv2d(32, 64, 4, 2)
         self.relu2 = nn.ReLU(inplace=True)
@@ -92,7 +92,7 @@ def train(model, start):
     image_data, reward, terminal = game_state.frame_step(action)
     image_data = resize_and_bgr2gray(image_data)
     image_data = image_to_tensor(image_data)
-    state = torch.cat((image_data, image_data, image_data, image_data)).unsqueeze(0)
+    state = image_data.unsqueeze(0)
 
     # initialize epsilon value
     epsilon = model.initial_epsilon
@@ -202,7 +202,7 @@ def test(model):
     image_data, reward, terminal = game_state.frame_step(action)
     image_data = resize_and_bgr2gray(image_data)
     image_data = image_to_tensor(image_data)
-    state = torch.cat((image_data, image_data, image_data, image_data)).unsqueeze(0)
+    state = image_data.unsqueeze(0)
 
     while True:
         # get output from the neural network
