@@ -39,8 +39,14 @@ class NeuralNetwork(nn.Module):
     def forward(self, x):
         hn = torch.FloatTensor(1, x.size()[0], 512).zero_()
         cn = torch.FloatTensor(1, x.size()[0], 512).zero_()
+        if torch.cuda.is_available():
+            hn = hn.cuda()
+            cn = cn.cuda()
         for i in range(4):
-            xi = torch.index_select(x, 1, torch.tensor([i]))
+            idx = torch.tensor([i])
+            if torch.cuda.is_available():
+                idx = idx.cuda()
+            xi = torch.index_select(x, 1, idx)
             out = self.conv1(xi)
             out = self.relu1(out)
             out = self.conv2(out)
@@ -59,7 +65,6 @@ class NeuralNetwork(nn.Module):
 
 
 def init_weights(m):
-    print(type(m))
     if type(m) == nn.Conv2d or type(m) == nn.Linear:
         torch.nn.init.uniform(m.weight, -0.01, 0.01)
         m.bias.data.fill_(0.01)
