@@ -54,7 +54,7 @@ class NeuralNetwork(nn.Module):
             out = self.conv3(out)
             out = self.relu3(out)
             out = out.view(out.size()[0], 1, -1)
-            out, (hn, cn) = self.lstm(out, (cn, hn))
+            out, (hn, cn) = self.lstm(out, (hn, cn))
 
         out = out.view(out.size()[0], -1)
         out = self.fc4(out)
