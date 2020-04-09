@@ -56,7 +56,7 @@ class NeuralNetwork(nn.Module):
         outb = self.conv3b(outb)
         outb = self.relu3(outb)
         outa = outa.view(outa.size()[0], -1)
-        outb = outa.view(outb.size()[0], -1)
+        outb = outb.view(outb.size()[0], -1)
         out = torch.cat((outa, outb), 1)
         out = out.view(out.size()[0], -1)
         out = self.fc4(out)
