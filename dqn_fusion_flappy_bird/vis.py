@@ -103,6 +103,13 @@ def train(model, start):
     # initialize replay memory
     replay_memory = []
 
+    losses = []
+    current_losses = []
+    rewards = []
+    current_rewards = []
+    q_values = []
+    current_q_values = []
+
     # initial action is do nothing
     action = torch.zeros([model.number_of_actions], dtype=torch.float32)
     action[0] = 1
