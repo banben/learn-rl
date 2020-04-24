@@ -15,6 +15,44 @@ import torch.optim as optim
 from game.flappy_bird import GameState
 
 
+def generate_cam(input_image, conv_output):
+    """
+        Full forward pass
+        conv_output is the output of convolutions at specified layer
+        model_output is the final output of the model            
+    """      
+    conv_output, model_output = self.extractor.forward_pass(input_image)
+    if target_index is None:
+        target_index = np.argmax(model_output.data.numpy())
+    # Target for backprop
+    one_hot_output = torch.FloatTensor(1, model_output.size()[-1]).zero_()
+    one_hot_output[0][target_index] = 1
+    # Zero grads
+    self.model.fc.zero_grad()
+    # Backward pass with specified target
+    model_output.backward(gradient=one_hot_output, retain_graph=True)
+    # Get hooked gradients
+    guided_gradients = self.extractor.gradients.data.numpy()[0]
+    # Get convolution outputs
+    target = conv_output.data.numpy()[0]
+    # Get weights from gradients
+    # Take averages for each gradient
+    weights = np.mean(guided_gradients, axis=(1, 2))
+    # Create empty numpy array for cam
+    cam = np.ones(target.shape[1:], dtype=np.float32)
+    # Multiply each weight with its conv output and then, sum
+    for i, w in enumerate(weights):
+        cam += w * target[i, :, :]
+    cam = cv2.resize(cam, (224, 224))
+    cam = np.maximum(cam, 0)
+    cam = (cam - np.min(cam)) / (np.max(cam) -
+                                 np.min(cam))  # Normalize between 0-1
+    cam = np.uint8(cam * 255)  # Scale between 0-255 to visualize
+    return cam
+
+
+
+
 class NeuralNetwork(nn.Module):
 
     def __init__(self):
@@ -28,24 +66,40 @@ class NeuralNetwork(nn.Module):
         self.replay_memory_size = 10000
         self.minibatch_size = 32
 
-        self.conv1 = nn.Conv2d(4, 32, 8, 4)
+        self.conv1a = nn.Conv2d(4, 32, 8, 4)
+        self.conv1b = nn.Conv2d(1, 32, 8, 4)
         self.relu1 = nn.ReLU(inplace=True)
-        self.conv2 = nn.Conv2d(32, 64, 4, 2)
+        self.conv2a = nn.Conv2d(32, 64, 4, 2)
+        self.conv2b = nn.Conv2d(32, 64, 4, 2)
         self.relu2 = nn.ReLU(inplace=True)
-        self.conv3 = nn.Conv2d(64, 64, 3, 1)
+        self.conv3a = nn.Conv2d(64, 64, 3, 1)
+        self.conv3b = nn.Conv2d(64, 64, 3, 1)
         self.relu3 = nn.ReLU(inplace=True)
-        self.fc4 = nn.Linear(3136, 512)
+        self.fc4 = nn.Linear(6272, 512)
         self.relu4 = nn.ReLU(inplace=True)
         self.fc5 = nn.Linear(512, self.number_of_actions)
 
     def forward(self, x):
-        out = self.conv1(x)
-        out = self.relu1(out)
-        out = self.conv2(out)
-        out = self.relu2(out)
-        out = self.conv3(out)
-        out = self.relu3(out)
-        conv_out = out.clone()
+        outa = self.conv1a(x)
+        outa = self.relu1(outa)
+        outa = self.conv2a(outa)
+        outa = self.relu2(outa)
+        outa = self.conv3a(outa)
+        outa = self.relu3(outa)
+        idx = torch.tensor([3])
+        if torch.cuda.is_available():
+            idx = idx.cuda()
+        xb = torch.index_select(x, 1, idx)
+        outb = self.conv1b(xb)
+        outb = self.relu1(outb)
+        outb = self.conv2b(outb)
+        outb = self.relu2(outb)
+        outb = self.conv3b(outb)
+        outb = self.relu3(outb)
+        conv_out = outb.clone()
+        outa = outa.view(outa.size()[0], -1)
+        outb = outb.view(outb.size()[0], -1)
+        out = torch.cat((outa, outb), 1)
         out = out.view(out.size()[0], -1)
         out = self.fc4(out)
         out = self.relu4(out)
@@ -76,11 +130,9 @@ def resize_and_bgr2gray(image):
     image_data = np.reshape(image_data, (84, 84, 1))
     return image_data
 
-
 def resize_and_bgr(image):
     image = image[0:288, 0:404]
     return image
-
 
 def train(model, start):
     # define Adam optimizer
@@ -256,12 +308,15 @@ def main(mode):
         model = torch.load(
             'pretrained_model/current_model_2000000.pth',
             map_location='cpu' if not cuda_is_available else None
-        ).eval()
+        )
+
+        modelN = NeuralNetwork()
+        modelN.load_state_dict(model.state_dict())
 
         if cuda_is_available:  # put on GPU if CUDA is available
-            model = model.cuda()
+            model = modelN.cuda()
 
-        test(model)
+        test(modelN)
 
     elif mode == 'train':
         if not os.path.exists('pretrained_model/'):
