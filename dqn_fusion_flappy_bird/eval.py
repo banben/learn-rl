@@ -224,6 +224,7 @@ def test(model):
     total_reward = 0
     max_reward = 0
     cur_reward = 0
+    rewards = []
 
     while True:
         if epsilon >= 10:
@@ -248,6 +249,7 @@ def test(model):
             epsilon += 1
             if cur_reward > max_reward:
                 max_reward = cur_reward
+            rewards.append(cur_reward)
             cur_reward = 0
         if reward > 0.1:
             total_reward += reward
@@ -261,6 +263,7 @@ def test(model):
 
     print('reward:', total_reward/10.0)
     print('max reward:', max_reward)
+    print('standard deviation:', np.std(rewards, axis=0))
 
 
 def main(mode):
