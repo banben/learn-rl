@@ -22,6 +22,7 @@ def get_action(state, target_net, epsilon, env, hidden):
     action_index, hidden = target_net.get_action(state, hidden)
     
     if np.random.rand() <= epsilon:
+        print("Performed random action!")
         action_index = [torch.randint(2, torch.Size([]), dtype=torch.int)][0]
 
     action[action_index] = 1
@@ -68,12 +69,11 @@ def main():
     online_net.train()
     target_net.train()
     memory = Memory(replay_memory_capacity)
-    running_score = 0
     epsilon = 1.0
-    steps = 0
     loss = 0
+    iteration = 0
 
-    for e in range(2000000):
+    while iteration < 2000000:
         done = False
 
         action = torch.zeros([2], dtype=torch.float32)
@@ -87,7 +87,6 @@ def main():
         hidden = None
 
         while not done:
-            steps += 1
 
             action, hidden = get_action(state, target_net, epsilon, env, hidden)
             image_data, reward, done = env.frame_step(action)
@@ -105,15 +104,22 @@ def main():
             state = next_state
 
             
-            if steps > initial_exploration and len(memory) > batch_size:
+            if iteration > initial_exploration and len(memory) > batch_size:
                 epsilon -= 0.00005
                 epsilon = max(epsilon, 0.1)
 
                 batch = memory.sample(batch_size)
                 loss = DRQN.train_model(online_net, target_net, optimizer, batch)
 
-                if steps % update_target == 0:
+                if iteration % update_target == 0:
                     update_target_model(online_net, target_net)
+
+            iteration += 1
+
+            if iteration % 25000 == 0:
+                torch.save(online_net, "pretrained_model/current_model_" + str(iteration) + ".pth")
+
+            print('iteration: {}'.format(iteration))
 
 
 
