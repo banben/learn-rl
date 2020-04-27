@@ -47,7 +47,7 @@ def image_to_tensor(image):
         image_tensor = image_tensor.cuda()
     return image_tensor
 
-def main():
+def train():
     env = GameState()
 
     # num_inputs = env.observation_space.shape[0]
@@ -119,7 +119,79 @@ def main():
 
             print('iteration: {}'.format(iteration))
 
+def test():
+    cuda_is_available = torch.cuda.is_available()
 
+    env = GameState()
+
+    # num_inputs = env.observation_space.shape[0]
+    num_inputs = 3136
+    num_actions = 2
+    print('state size:', num_inputs)
+    print('action size:', num_actions)
+
+    model = torch.load(
+                'pretrained_model/current_model_2000000.pth',
+                map_location='cpu' if not cuda_is_available else None
+            ).eval()
+
+    model.to(device)
+    
+    action = torch.zeros([2], dtype=torch.float32)
+    action[0] = 1
+    image_data, reward, done = env.frame_step(action)
+    image_data = resize_and_bgr2gray(image_data)
+    image_data = image_to_tensor(image_data)
+    state = image_data
+    state = torch.Tensor(state).to(device)
+
+    hidden = None
+
+    epsilon = 0
+    total_reward = 0
+    max_reward = 0
+    cur_reward = 0
+    rewards = []
+
+    while True:
+        if epsilon >= 10:
+            break
+
+        action, hidden = get_action(state, model, 0, env, hidden)
+        image_data, reward, done = env.frame_step(action)
+        image_data = resize_and_bgr2gray(image_data)
+        image_data = image_to_tensor(image_data)
+
+        next_state = image_data
+        next_state = torch.Tensor(next_state)
+
+        state = next_state
+
+        if done:
+            epsilon += 1
+            if cur_reward > max_reward:
+                max_reward = cur_reward
+            rewards.append(cur_reward)
+            cur_reward = 0
+        if reward > 0.1:
+            total_reward += reward
+            cur_reward += reward
+
+    print('reward:', total_reward/10.0)
+    print('max reward:', max_reward)
+    print('standard deviation:', np.std(rewards, axis=0))
+
+
+def main(mode):
+    if mode == 'test':
+    
+        test()
+
+    elif mode == 'train':
+        if not os.path.exists('pretrained_model/'):
+            os.mkdir('pretrained_model/')
+
+        train()
 
 if __name__=="__main__":
-    main()
+    main(sys.argv[1])
