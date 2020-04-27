@@ -10,7 +10,6 @@ import torch.optim as optim
 import torch.nn.functional as F
 from model import DRQN
 from memory import Memory
-from tensorboardX import SummaryWriter
 
 from config import env_name, initial_exploration, batch_size, update_target, goal_score, log_interval, device, replay_memory_capacity, lr, sequence_length
 
@@ -62,7 +61,6 @@ def main():
     update_target_model(online_net, target_net)
 
     optimizer = optim.Adam(online_net.parameters(), lr=lr)
-    writer = SummaryWriter('logs')
 
     online_net.to(device)
     target_net.to(device)
