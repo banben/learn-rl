@@ -3,6 +3,7 @@ import torch.nn as nn
 import torch.nn.functional as F
 
 from config import gamma, device, batch_size, sequence_length, burn_in_length
+import pdb
 
 class DRQN(nn.Module):
     def __init__(self, num_inputs, num_outputs):
@@ -16,8 +17,9 @@ class DRQN(nn.Module):
         self.relu2 = nn.ReLU(inplace=True)
         self.conv3 = nn.Conv2d(64, 64, 3, 1)
         self.relu3 = nn.ReLU(inplace=True)
+        self.fc0 = nn.Linear(num_inputs, 512)
 
-        self.lstm = nn.LSTM(input_size=num_inputs, hidden_size=512, batch_first=True)
+        self.lstm = nn.LSTM(input_size=512, hidden_size=512, batch_first=True)
         self.fc1 = nn.Linear(512, 512)
         self.fc2 = nn.Linear(512, num_outputs)
 
@@ -40,6 +42,7 @@ class DRQN(nn.Module):
         out = self.conv3(out)
         out = self.relu3(out)
         out = out.view(_batch_size, _sequence_length, self.num_inputs)
+        out = self.fc0(out)
 
         if hidden is not None:
             out, hidden = self.lstm(out, hidden)
@@ -55,11 +58,18 @@ class DRQN(nn.Module):
     def train_model(cls, online_net, target_net, optimizer, batch):
         def slice_burn_in(item):
             return item[:, burn_in_length:, :]
-        states = torch.stack(batch.state).view(batch_size, sequence_length, online_net.num_inputs)
-        next_states = torch.stack(batch.next_state).view(batch_size, sequence_length, online_net.num_inputs)
+
+        states = torch.stack(batch.state)
+        next_states = torch.stack(batch.next_state)
         actions = torch.stack(batch.action).view(batch_size, sequence_length, -1).long()
         rewards = torch.stack(batch.reward).view(batch_size, sequence_length, -1)
         masks = torch.stack(batch.mask).view(batch_size, sequence_length, -1)
+        if torch.cuda.is_available():
+            states = states.cuda()
+            next_states = next_states.cuda()
+            actions = actions.cuda()
+            rewards = rewards.cuda()
+            masks = masks.cuda()
 
         pred, _ = online_net(states)
         next_pred, _ = target_net(next_states)
@@ -88,4 +98,4 @@ class DRQN(nn.Module):
 
         _, action = torch.max(qvalue, 2)
         
-        return action.cpu().numpy()[0][0], hidden
+        return action[0][0], hidden

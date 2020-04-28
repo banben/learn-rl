@@ -26,7 +26,7 @@ def get_action(state, target_net, epsilon, env, hidden):
 
     action[action_index] = 1
 
-    return action, hidden
+    return action, hidden, action_index
 
 def update_target_model(online_net, target_net):
     # Target <- Net
@@ -61,8 +61,10 @@ def train():
 
     optimizer = optim.Adam(online_net.parameters(), lr=lr)
 
-    online_net.to(device)
-    target_net.to(device)
+    if torch.cuda.is_available():  # put on GPU if CUDA is available
+        online_net = online_net.cuda()
+        target_net = target_net.cuda()
+
     online_net.train()
     target_net.train()
     memory = Memory(replay_memory_capacity)
@@ -79,27 +81,30 @@ def train():
         image_data = resize_and_bgr2gray(image_data)
         image_data = image_to_tensor(image_data)
         state = image_data
-        state = torch.Tensor(state).to(device)
+        state = torch.Tensor(state)
+        if torch.cuda.is_available():
+            state = state.cuda()
 
         hidden = None
 
         while not done:
 
-            action, hidden = get_action(state, target_net, epsilon, env, hidden)
+            action, hidden, action_index = get_action(state, target_net, epsilon, env, hidden)
             image_data, reward, done = env.frame_step(action)
             image_data = resize_and_bgr2gray(image_data)
             image_data = image_to_tensor(image_data)
 
             next_state = image_data
-            next_state = torch.Tensor(next_state).to(device)
+            next_state = torch.Tensor(next_state)
+            if torch.cuda.is_available():
+                next_state = next_state.cuda()
 
             mask = 0 if done else 1
             reward = reward if not done else -1
 
-            memory.push(state, next_state, action, reward, mask)
+            memory.push(state, next_state, action_index, reward, mask)
 
             state = next_state
-
             
             if iteration > initial_exploration and len(memory) > batch_size:
                 epsilon -= 0.00005
@@ -109,6 +114,7 @@ def train():
                 loss = DRQN.train_model(online_net, target_net, optimizer, batch)
 
                 if iteration % update_target == 0:
+                    print('iteration: {}, update model'.format(iteration))
                     update_target_model(online_net, target_net)
 
             iteration += 1
@@ -134,7 +140,8 @@ def test():
                 map_location='cpu' if not cuda_is_available else None
             ).eval()
 
-    model.to(device)
+    if torch.cuda.is_available():  # put on GPU if CUDA is available
+        model = model.cuda()
     
     action = torch.zeros([2], dtype=torch.float32)
     action[0] = 1
@@ -142,7 +149,9 @@ def test():
     image_data = resize_and_bgr2gray(image_data)
     image_data = image_to_tensor(image_data)
     state = image_data
-    state = torch.Tensor(state).to(device)
+    state = torch.Tensor(state)
+    if torch.cuda.is_available():
+        state = state.cuda()
 
     hidden = None
 
@@ -156,13 +165,15 @@ def test():
         if epsilon >= 10:
             break
 
-        action, hidden = get_action(state, model, 0, env, hidden)
+        action, hidden, action_index = get_action(state, model, 0, env, hidden)
         image_data, reward, done = env.frame_step(action)
         image_data = resize_and_bgr2gray(image_data)
         image_data = image_to_tensor(image_data)
 
         next_state = image_data
         next_state = torch.Tensor(next_state)
+        if torch.cuda.is_available():
+            next_state = next_state.cuda()
 
         state = next_state
 
