@@ -92,7 +92,7 @@ def train():
             image_data = image_to_tensor(image_data)
 
             next_state = image_data
-            next_state = torch.Tensor(next_state)
+            next_state = torch.Tensor(next_state).to(device)
 
             mask = 0 if done else 1
             reward = reward if not done else -1
