@@ -1,0 +1,12 @@
+gym==0.10.0
+-e git+https://github.com/lusob/gym-ple.git@df11bc8566b22011f635f4f74331fbc79fb3a9de#egg=gym_ple
+numpy==1.18.2
+opencv-python==3.4.4.19
+Pillow==6.2.0
+-e git+https://github.com/ntasfi/PyGame-Learning-Environment.git@3dbe79dc0c35559bb441b9359948aabf9bb3d331#egg=ple
+pygame==2.0.0.dev4
+pytz==2019.3
+scikit-image==0.16.2
+scipy==1.4.1
+torch==1.0.0
+torchvision==0.2.1
