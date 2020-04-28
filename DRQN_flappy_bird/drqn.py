@@ -43,8 +43,7 @@ def image_to_tensor(image):
     image_tensor = image.transpose(2, 0, 1)
     image_tensor = image_tensor.astype(np.float32)
     image_tensor = torch.from_numpy(image_tensor)
-    if torch.cuda.is_available():  # put on GPU if CUDA is available
-        image_tensor = image_tensor.cuda()
+
     return image_tensor
 
 def train():
