@@ -14,12 +14,12 @@ class Memory(object):
         self.capacity = capacity
 
     def push(self, state, next_state, action, reward, mask):
-        self.local_memory.append(Transition(state, next_state, action, reward, mask))
+        self.local_memory.append(Transition(state.cpu(), next_state.cpu(), action, reward, mask))
         if mask == 0:
             while len(self.local_memory) < sequence_length:
                 self.local_memory.insert(0, Transition(
-                    torch.Tensor([0, 0]),
-                    torch.Tensor([0, 0]),
+                    torch.zeros([1, 84, 84], dtype=torch.float32).cpu(),
+                    torch.zeros([1, 84, 84], dtype=torch.float32).cpu(),
                     0,
                     0,
                     0,
